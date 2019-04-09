@@ -16,3 +16,7 @@ Ideas for task list features:
 - repeating
 - tasklist groups, projects or folders
 - notifications (task status changes)
+
+## License
+
+[MIT](https://opensource.org/licenses/MIT)
