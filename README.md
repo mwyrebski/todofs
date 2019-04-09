@@ -13,5 +13,6 @@ Ideas for task list features:
 - sharing
 - deadlines
 - reminders
+- repeating
 - tasklist groups, projects or folders
 - notifications (task status changes)
