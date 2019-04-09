@@ -1,6 +1,6 @@
 ﻿# TaskDo
 
-Productivity booster app which helps which maintains your TODO lists.
+Productivity booster app which maintains your TODO lists.
 
 ## Improvements
 
