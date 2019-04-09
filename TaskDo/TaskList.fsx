@@ -77,6 +77,7 @@ module TaskList =
             yield header
             yield String.replicate (String.length header) "-" 
             yield! tasks
+            yield String.Empty
         }
         |> String.concat Environment.NewLine
         |> printfn "%s"
