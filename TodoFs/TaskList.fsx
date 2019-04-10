@@ -14,7 +14,7 @@ type TaskData = {
     Id: Id
     Title: string
     Status: TaskStatus
-}
+    }
 
 type TaskList = {
     Id : Id
@@ -81,17 +81,15 @@ module TaskList =
         }
         |> String.concat Environment.NewLine
         |> printfn "%s"
-        // |> List.iter printfn
 
 
 
 // tests
 
-
 let myEmptyList = TaskList.create "List of things to do"
 
 let myTasks = [
-    Task.create "Possibility of creating task lists" |> Task.markDone
+    Task.markDone (Task.create "Possibility of creating task lists")
     Task.create "Handle Done task status" |> Task.markDone
     Task.create "Add labels"
     Task.create "Add helper for displaying task list" |> Task.markDone
@@ -99,12 +97,13 @@ let myTasks = [
     Task.create "Add reminders"
 ]
 
-// let myList = myTasks |> List.map addToMyList ???
+// add all myTasks to myEmptyList
 let myList = List.fold (fun list task -> TaskList.addTask list task) myEmptyList myTasks
 
 TaskList.display myList;;
 
-// with one more task after renaming it
+
+// create new task, rename it and add to myList
 
 let extraTask = Task.create "Add ..."
 let extraTask' = Task.rename extraTask "Add possiblity of task renaming"
