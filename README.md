@@ -1,6 +1,6 @@
-﻿# TaskDo
+﻿# TodoFs
 
-Productivity booster app which maintains your TODO lists.
+Application which maintains TODO lists.
 
 ## Improvements
 
