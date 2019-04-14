@@ -6,20 +6,20 @@ type Id = Id of int64
 
 // domain types
 
-type TaskStatus =
+type Status =
     | Undone
     | Done
 
-type TaskData = {
+type Task = {
     Id: Id
     Title: string
-    Status: TaskStatus
+    Status: Status
     }
 
-type TaskList = {
+type TodoList = {
     Id : Id
     Name: string
-    Tasks: TaskData list
+    Tasks: Task list
     }
 
 
@@ -47,32 +47,32 @@ module Task =
         {task with Status = Done}
 
 
-module TaskList =
+module TodoList =
     
     let create name =
         {Id = newId (); Name = name; Tasks = []}
 
-    let addTask tasklist task  =
-        {tasklist with Tasks = task :: tasklist.Tasks}
+    let addTask todolist task  =
+        {todolist with Tasks = task :: todolist.Tasks}
 
-    let markDone tasklist (task: TaskData)  =
-        let markDoneOrPassthru (t: TaskData) =
+    let markDone todolist (task: Task)  =
+        let markDoneOrPassthru (t: Task) =
             if t.Id = task.Id
             then Task.markDone t
             else t
-        let tasks = tasklist.Tasks |> List.map markDoneOrPassthru
-        {tasklist with Tasks = tasks}
+        let tasks = todolist.Tasks |> List.map markDoneOrPassthru
+        {todolist with Tasks = tasks}
 
-    let display tasklist =
+    let display todolist =
         let doneChar task =
             match task.Status with
             | Done -> 'x'
             | Undone -> ' '
         let tasks =
-            tasklist.Tasks
+            todolist.Tasks
             |> Seq.map (fun t -> sprintf "[%c] %s" (doneChar t) t.Title)
         seq {
-            let header = sprintf "..:: %s ::.." tasklist.Name
+            let header = sprintf "..:: %s ::.." todolist.Name
             yield String.Empty
             yield header
             yield String.replicate (String.length header) "-" 
@@ -86,7 +86,7 @@ module TaskList =
 
 // tests
 
-let myEmptyList = TaskList.create "List of things to do"
+let myEmptyList = TodoList.create "List of things to do"
 
 let myTasks = [
     Task.markDone (Task.create "Possibility of creating task lists")
@@ -98,16 +98,16 @@ let myTasks = [
 ]
 
 // add all myTasks to myEmptyList
-let myList = List.fold (fun list task -> TaskList.addTask list task) myEmptyList myTasks
+let myList = List.fold (fun list task -> TodoList.addTask list task) myEmptyList myTasks
 
-TaskList.display myList;;
+TodoList.display myList;;
 
 
 // create new task, rename it and add to myList
 
 let extraTask = Task.create "Add ..."
 let extraTask' = Task.rename extraTask "Add possiblity of task renaming"
-let myListWithExtraTask = TaskList.addTask myList extraTask'
-let myCompleteList = TaskList.markDone myListWithExtraTask extraTask'
+let myListWithExtraTask = TodoList.addTask myList extraTask'
+let myCompleteList = TodoList.markDone myListWithExtraTask extraTask'
 
-TaskList.display myCompleteList;;
+TodoList.display myCompleteList;;

@@ -5,7 +5,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="TaskList.fsx" />
+    <Compile Include="Common.SimpleTypes.fs" />
+    <Compile Include="Common.Functions.fs" />
+    <Compile Include="TodoFs.PublicTypes.fs" />
+    <Compile Include="TodoFs.Implementation.fs" />
   </ItemGroup>
 
 </Project>
