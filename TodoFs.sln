@@ -11,6 +11,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		TaskList.fsx = TaskList.fsx
 	EndProjectSection
 EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "TodoFs.Tests", "TodoFs.Tests\TodoFs.Tests.fsproj", "{9A3832E7-A02F-4B7F-9CE2-E675C1A2E4E4}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{C5A60203-7728-4FEF-B9D6-2B69671338C9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C5A60203-7728-4FEF-B9D6-2B69671338C9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C5A60203-7728-4FEF-B9D6-2B69671338C9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9A3832E7-A02F-4B7F-9CE2-E675C1A2E4E4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9A3832E7-A02F-4B7F-9CE2-E675C1A2E4E4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9A3832E7-A02F-4B7F-9CE2-E675C1A2E4E4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9A3832E7-A02F-4B7F-9CE2-E675C1A2E4E4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

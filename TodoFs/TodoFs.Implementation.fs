@@ -1,4 +1,4 @@
-﻿module internal TodoFs.Implementation
+﻿module TodoFs.Implementation
 
 open System
 open TodoFs
@@ -21,8 +21,11 @@ let doTask task =
 let createTodo name =
     {Id = newId (); Name = name; Tasks = []}
 
-let addTask todo task  =
+let addTask todo task =
     {todo with Tasks = task :: todo.Tasks}
+
+let addTasks todo tasks =
+    {todo with Tasks = tasks @ todo.Tasks}
 
 let markDone todo (task: Task)  =
     let markDoneOrPassthru (t: Task) =
@@ -32,7 +35,7 @@ let markDone todo (task: Task)  =
     let tasks = todo.Tasks |> List.map markDoneOrPassthru
     {todo with Tasks = tasks}
 
-let display todo =
+let toString todo =
     let doneChar task =
         match task.Status with
         | Done -> 'x'
@@ -49,4 +52,3 @@ let display todo =
         yield String.Empty
     }
     |> String.concat Environment.NewLine
-    |> printfn "%s"
