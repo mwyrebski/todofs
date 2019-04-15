@@ -24,6 +24,7 @@ Ideas for task list features:
 - repeating
 - tasklist groups, projects or folders
 - notifications (task status changes)
+- console application
 
 ## License
 
