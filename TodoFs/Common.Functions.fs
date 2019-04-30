@@ -4,5 +4,5 @@ open System
 
 [<AutoOpen>]
 module Utils =
-    let inline newId () =
-        Id DateTime.UtcNow.Ticks
+    let inline ticks () =
+        DateTime.UtcNow.Ticks

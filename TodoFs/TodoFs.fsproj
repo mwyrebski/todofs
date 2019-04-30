@@ -2,11 +2,12 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <OutputType>Library</OutputType>
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="Common.SimpleTypes.fs" />
     <Compile Include="Common.Functions.fs" />
+    <Compile Include="Common.SimpleTypes.fs" />
     <Compile Include="TodoFs.PublicTypes.fs" />
     <Compile Include="TodoFs.Implementation.fs" />
   </ItemGroup>

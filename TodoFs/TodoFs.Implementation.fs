@@ -7,7 +7,7 @@ open TodoFs.Common
 // Task
 
 let createTask title =
-    {Id = newId (); Title = title; Status = Undone}
+    {Id = Id.create(); Title = title; Status = Undone}
 
 let renameTask task title =
     {task with Title = title}
@@ -19,7 +19,7 @@ let doTask task =
 // TodoList
 
 let createTodo name =
-    {Id = newId (); Name = name; Tasks = []}
+    {Id = Id.create(); Name = name; Tasks = []}
 
 let addTask todo task =
     {todo with Tasks = task :: todo.Tasks}
