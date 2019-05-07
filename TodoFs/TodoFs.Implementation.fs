@@ -20,6 +20,9 @@ let doTask task =
 
 let createTodo name =
     {Id = Id.create(); Name = name; Tasks = []}
+    
+let renameTodo todo name =
+    {todo with Name = name}
 
 let addTask todo task =
     {todo with Tasks = task :: todo.Tasks}
