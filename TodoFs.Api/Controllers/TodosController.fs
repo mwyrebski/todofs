@@ -43,6 +43,7 @@ type TodosController(repo: TodosRepository) =
         match s with 
         | StatusDto.Undone -> Status.Undone
         | StatusDto.Done -> Status.Done
+        | _ -> failwith "Unknown status"
 
     [<HttpGet>]
     member this.GetTodoLists() =
@@ -110,7 +111,7 @@ type TodosController(repo: TodosRepository) =
         | None ->
             this.NotFound() :> IActionResult
 
-    [<HttpPut("{todoId}/tasks/{taskId}")>]
+    [<HttpPatch("{todoId}/tasks/{taskId}")>]
     member this.RenameTask(todoId: int64, taskId: int64,  [<FromBody>] title: string) =
         let todoId = Id.from todoId
         let taskId = Id.from taskId
@@ -120,7 +121,7 @@ type TodosController(repo: TodosRepository) =
             let taskOpt = List.tryFind (fun (x: Task) -> x.Id = taskId) todo.Tasks
             match taskOpt with
             | Some task ->
-                let newTasks = List.map (fun (x:Task) -> if x.Id = taskId then renameTask x title else x) todo.Tasks
+                let newTasks = List.map (fun (x:Task) -> if x = task then renameTask x title else x) todo.Tasks
                 let newTodo = {todo with Tasks = newTasks}
                 repo.Upsert newTodo
                 toTodoDto newTodo |> this.Ok :> IActionResult
@@ -139,7 +140,7 @@ type TodosController(repo: TodosRepository) =
             match taskOpt with
             | Some task ->
                 let status = toStatus status
-                let newTasks = List.map (fun (x:Task) -> if x.Id = taskId then {x with Status = status} else x) todo.Tasks
+                let newTasks = List.map (fun (x:Task) -> if x = task then {x with Status = status} else x) todo.Tasks
                 let newTodo = {todo with Tasks = newTasks}
                 repo.Upsert newTodo
                 toTodoDto newTodo |> this.Ok :> IActionResult
