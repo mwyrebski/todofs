@@ -39,6 +39,11 @@ type TodosController(repo: TodosRepository) =
             | Done -> StatusDto.Done
         { Id = x.Id.Value; Title = x.Title; Status = status }
 
+    let toStatus s = 
+        match s with 
+        | StatusDto.Undone -> Status.Undone
+        | StatusDto.Done -> Status.Done
+
     [<HttpGet>]
     member this.GetTodoLists() =
         let todos = repo.All() |> List.map toTodoDto
@@ -94,15 +99,53 @@ type TodosController(repo: TodosRepository) =
 
     [<HttpPost("{todoId}/tasks")>]
     member this.AddTask(todoId: int64,  [<FromBody>] title: string) =
-        ()
+        let todoId = Id.from todoId
+        let todoOpt = repo.TryGet todoId
+        match todoOpt with
+        | Some todo ->
+            let task = createTask title
+            let newTodo = addTask todo task
+            repo.Upsert newTodo
+            this.NoContent() :> IActionResult
+        | None ->
+            this.NotFound() :> IActionResult
 
     [<HttpPut("{todoId}/tasks/{taskId}")>]
     member this.RenameTask(todoId: int64, taskId: int64,  [<FromBody>] title: string) =
-        ()
+        let todoId = Id.from todoId
+        let taskId = Id.from taskId
+        let todoOpt = repo.TryGet todoId
+        match todoOpt with
+        | Some todo ->
+            let taskOpt = List.tryFind (fun (x: Task) -> x.Id = taskId) todo.Tasks
+            match taskOpt with
+            | Some task ->
+                let newTasks = List.map (fun (x:Task) -> if x.Id = taskId then renameTask x title else x) todo.Tasks
+                let newTodo = {todo with Tasks = newTasks}
+                repo.Upsert newTodo
+                toTodoDto newTodo |> this.Ok :> IActionResult
+            | None -> this.NotFound() :> IActionResult
+        | None ->
+            this.NotFound() :> IActionResult
 
     [<HttpPut("{todoId}/tasks/{taskId}")>]
     member this.ChangeStatus(todoId: int64, taskId: int64,  [<FromQuery>] status: StatusDto) =
-        ()
+        let todoId = Id.from todoId
+        let taskId = Id.from taskId
+        let todoOpt = repo.TryGet todoId
+        match todoOpt with
+        | Some todo ->
+            let taskOpt = List.tryFind (fun (x: Task) -> x.Id = taskId) todo.Tasks
+            match taskOpt with
+            | Some task ->
+                let status = toStatus status
+                let newTasks = List.map (fun (x:Task) -> if x.Id = taskId then {x with Status = status} else x) todo.Tasks
+                let newTodo = {todo with Tasks = newTasks}
+                repo.Upsert newTodo
+                toTodoDto newTodo |> this.Ok :> IActionResult
+            | None -> this.NotFound() :> IActionResult
+        | None ->
+            this.NotFound() :> IActionResult
 
     [<HttpDelete("{todoId}")>]
     member this.DeleteTodoList(todoId: int64) =
@@ -115,4 +158,18 @@ type TodosController(repo: TodosRepository) =
 
     [<HttpDelete("{todoId}/tasks/{taskId}")>]
     member this.DeleteTask(todoId: int64, taskId: int64) =
-        ()
+        let todoId = Id.from todoId
+        let taskId = Id.from taskId
+        let todoOpt = repo.TryGet todoId
+        match todoOpt with
+        | Some todo ->
+            let taskOpt = List.tryFind (fun (x: Task) -> x.Id = taskId) todo.Tasks
+            match taskOpt with
+            | Some task ->
+                let newTasks = List.except [task] todo.Tasks
+                let newTodo = {todo with Tasks = newTasks}
+                repo.Upsert newTodo
+                toTodoDto newTodo |> this.Ok :> IActionResult
+            | None -> this.NotFound() :> IActionResult
+        | None ->
+            this.NotFound() :> IActionResult

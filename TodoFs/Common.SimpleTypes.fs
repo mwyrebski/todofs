@@ -6,7 +6,10 @@ type Id = private Id of int64 with
         value
 
 module Id =
+    let mutable private _next = 0L
     let create () =
-        ticks() |> Id
+        let id = Id _next
+        _next <- _next + 1L
+        id
     let from x =
         Id x
