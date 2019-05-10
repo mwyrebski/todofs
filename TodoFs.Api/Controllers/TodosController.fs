@@ -39,12 +39,14 @@ type TodosController(repo: TodosRepository) =
             | Done -> StatusDto.Done
         { Id = x.Id.Value; Title = x.Title; Status = status }
 
-    let toStatus s = 
-        match s with 
+    let toStatus s =
+        match s with
         | StatusDto.Undone -> Status.Undone
         | StatusDto.Done -> Status.Done
         | _ -> failwith "Unknown status"
-
+        
+    let tryFindTask id = List.tryFind (fun (x: Task) -> x.Id = id)
+        
     [<HttpGet>]
     member this.GetTodoLists() =
         let todos = repo.All() |> List.map toTodoDto
@@ -70,7 +72,7 @@ type TodosController(repo: TodosRepository) =
         let todoOpt = todoId |> Id.from |> repo.TryGet
         match todoOpt with
         | Some todo ->
-            let taskOpt = List.tryFind (fun (x: Task) -> x.Id = taskId) todo.Tasks
+            let taskOpt = tryFindTask taskId todo.Tasks
             match taskOpt with
             | Some task -> toTaskDto task |> this.Ok :> IActionResult
             | None -> this.NotFound() :> IActionResult
@@ -112,11 +114,14 @@ type TodosController(repo: TodosRepository) =
         let todoOpt = todoId |> Id.from |> repo.TryGet
         match todoOpt with
         | Some todo ->
-            let taskOpt = List.tryFind (fun (x: Task) -> x.Id = taskId) todo.Tasks
+            let taskOpt = tryFindTask taskId todo.Tasks
             match taskOpt with
             | Some task ->
-                let newTasks = List.map (fun (x:Task) -> if x = task then renameTask x title else x) todo.Tasks
-                let newTodo = {todo with Tasks = newTasks}
+                let renameOrPassthru x =
+                    if x = task
+                    then renameTask x title
+                    else x
+                let newTodo = { todo with Tasks = todo.Tasks |> List.map renameOrPassthru }
                 repo.Upsert newTodo
                 toTodoDto newTodo |> this.Ok :> IActionResult
             | None -> this.NotFound() :> IActionResult
@@ -129,12 +134,14 @@ type TodosController(repo: TodosRepository) =
         let todoOpt = todoId |> Id.from |> repo.TryGet
         match todoOpt with
         | Some todo ->
-            let taskOpt = List.tryFind (fun (x: Task) -> x.Id = taskId) todo.Tasks
+            let taskOpt = tryFindTask taskId todo.Tasks
             match taskOpt with
             | Some task ->
-                let status = toStatus status
-                let newTasks = List.map (fun (x:Task) -> if x = task then {x with Status = status} else x) todo.Tasks
-                let newTodo = {todo with Tasks = newTasks}
+                let replaceOrPassthru x =
+                    if x = task
+                    then { x with Status = status |> toStatus }
+                    else x
+                let newTodo = { todo with Tasks = todo.Tasks |> List.map replaceOrPassthru }
                 repo.Upsert newTodo
                 toTodoDto newTodo |> this.Ok :> IActionResult
             | None -> this.NotFound() :> IActionResult
@@ -143,7 +150,7 @@ type TodosController(repo: TodosRepository) =
 
     [<HttpDelete("{todoId}")>]
     member this.DeleteTodoList(todoId: int64) =
-        let removed = todoId |> Id.from |> repo.Remove 
+        let removed = todoId |> Id.from |> repo.Remove
         if removed then
             this.Ok() :> IActionResult
         else
@@ -155,11 +162,10 @@ type TodosController(repo: TodosRepository) =
         let todoOpt = todoId |> Id.from |> repo.TryGet
         match todoOpt with
         | Some todo ->
-            let taskOpt = List.tryFind (fun (x: Task) -> x.Id = taskId) todo.Tasks
+            let taskOpt = tryFindTask taskId todo.Tasks
             match taskOpt with
             | Some task ->
-                let newTasks = List.except [task] todo.Tasks
-                let newTodo = {todo with Tasks = newTasks}
+                let newTodo = { todo with Tasks = todo.Tasks |> List.except [ task ] }
                 repo.Upsert newTodo
                 toTodoDto newTodo |> this.Ok :> IActionResult
             | None -> this.NotFound() :> IActionResult
