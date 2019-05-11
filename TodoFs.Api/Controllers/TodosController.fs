@@ -46,6 +46,9 @@ type TodosController(repo: TodosRepository) =
         | _ -> failwith "Unknown status"
         
     let tryFindTask id = List.tryFind (fun (x: Task) -> x.Id = id)
+    
+    member private this.ok x = this.Ok x :> IActionResult
+    member private this.notFound () = this.NotFound() :> IActionResult
         
     [<HttpGet>]
     member this.GetTodoLists() =
@@ -54,10 +57,10 @@ type TodosController(repo: TodosRepository) =
 
     [<HttpGet("{todoId}")>]
     member this.GetTodoList(todoId: int64) =
-        let todoOpt = todoId |> Id.from |> repo.TryGet
-        match todoOpt with
-        | Some todo -> todo |> toTodoDto |> this.Ok :> IActionResult
-        | None -> this.NotFound() :> IActionResult
+        todoId
+        |> Id.from
+        |> repo.TryGet
+        |> Option.fold (fun _ x -> x |> toTodoDto |> this.ok) (this.notFound())
 
     [<HttpGet("{todoId}/tasks")>]
     member this.GetTasks(todoId: int64) =
@@ -92,7 +95,7 @@ type TodosController(repo: TodosRepository) =
         | Some todo ->
             renameTodo todo name
             |> repo.Upsert
-            this.Ok() :> IActionResult
+            |> this.Ok :> IActionResult
         | None ->
             this.NotFound() :> IActionResult
 
