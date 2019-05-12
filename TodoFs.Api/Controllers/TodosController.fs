@@ -44,12 +44,13 @@ type TodosController(repo: TodosRepository) =
         | StatusDto.Undone -> Status.Undone
         | StatusDto.Done -> Status.Done
         | _ -> failwith "Unknown status"
-        
+
     let tryFindTask id = List.tryFind (fun (x: Task) -> x.Id = id)
-    
+
     member private this.ok x = this.Ok x :> IActionResult
-    member private this.notFound () = this.NotFound() :> IActionResult
-        
+    member private this.notFound() = this.NotFound() :> IActionResult
+    member private this.noContent() = this.NoContent() :> IActionResult
+
     [<HttpGet>]
     member this.GetTodoLists() =
         let todos = repo.All() |> List.map toTodoDto
@@ -64,23 +65,21 @@ type TodosController(repo: TodosRepository) =
 
     [<HttpGet("{todoId}/tasks")>]
     member this.GetTasks(todoId: int64) =
-        let todoOpt = todoId |> Id.from |> repo.TryGet
-        match todoOpt with
-        | Some todo -> todo.Tasks |> List.map toTaskDto |> this.Ok :> IActionResult
-        | None -> this.NotFound() :> IActionResult
+        todoId
+        |> Id.from
+        |> repo.TryGet
+        |> Option.fold (fun _ x -> x.Tasks |> List.map toTaskDto |> this.ok) (this.notFound())
 
     [<HttpGet("{todoId}/tasks/{taskId}")>]
     member this.GetTask(todoId: int64, taskId: int64) =
-        let taskId = Id.from taskId
-        let todoOpt = todoId |> Id.from |> repo.TryGet
-        match todoOpt with
-        | Some todo ->
-            let taskOpt = tryFindTask taskId todo.Tasks
-            match taskOpt with
-            | Some task -> toTaskDto task |> this.Ok :> IActionResult
-            | None -> this.NotFound() :> IActionResult
-        | None ->
-            this.NotFound() :> IActionResult
+        let tryGetTask todo =
+            todo.Tasks
+            |> tryFindTask (Id.from taskId)
+            |> Option.fold (fun _ x -> toTaskDto x |> this.ok) (this.notFound())
+        todoId
+        |> Id.from
+        |> repo.TryGet
+        |> Option.fold (fun _ x -> tryGetTask x) (this.notFound())
 
     [<HttpPost>]
     member this.AddTodoList( [<FromBody>] name: string) =
@@ -90,87 +89,83 @@ type TodosController(repo: TodosRepository) =
 
     [<HttpPut("{todoId}")>]
     member this.RenameTodoList(todoId: int64,  [<FromBody>] name: string) =
-        let todoOpt = todoId |> Id.from |> repo.TryGet
-        match todoOpt with
-        | Some todo ->
+        let rename todo =
             renameTodo todo name
             |> repo.Upsert
-            |> this.Ok :> IActionResult
-        | None ->
-            this.NotFound() :> IActionResult
+            |> this.ok
+        todoId
+        |> Id.from
+        |> repo.TryGet
+        |> Option.fold (fun _ x -> rename x) (this.notFound())
 
     [<HttpPost("{todoId}/tasks")>]
     member this.AddTask(todoId: int64,  [<FromBody>] title: string) =
-        let todoOpt = todoId |> Id.from |> repo.TryGet
-        match todoOpt with
-        | Some todo ->
+        let create todo =
             createTask title
             |> addTask todo
             |> repo.Upsert
-            this.NoContent() :> IActionResult
-        | None ->
-            this.NotFound() :> IActionResult
+            |> this.noContent
+        todoId
+        |> Id.from
+        |> repo.TryGet
+        |> Option.fold (fun _ x -> create x) (this.notFound())
 
     [<HttpPatch("{todoId}/tasks/{taskId}")>]
     member this.RenameTask(todoId: int64, taskId: int64,  [<FromBody>] title: string) =
-        let taskId = Id.from taskId
-        let todoOpt = todoId |> Id.from |> repo.TryGet
-        match todoOpt with
-        | Some todo ->
-            let taskOpt = tryFindTask taskId todo.Tasks
-            match taskOpt with
-            | Some task ->
+        let tryRenameTodo todo =
+            let rename task =
                 let renameOrPassthru x =
                     if x = task
                     then renameTask x title
                     else x
                 let newTodo = { todo with Tasks = todo.Tasks |> List.map renameOrPassthru }
                 repo.Upsert newTodo
-                toTodoDto newTodo |> this.Ok :> IActionResult
-            | None -> this.NotFound() :> IActionResult
-        | None ->
-            this.NotFound() :> IActionResult
+                toTodoDto newTodo |> this.ok
+            todo.Tasks
+            |> tryFindTask (Id.from taskId)
+            |> Option.fold (fun _ x -> rename x) (this.notFound())
+        todoId
+        |> Id.from
+        |> repo.TryGet
+        |> Option.fold (fun _ x -> tryRenameTodo x) (this.notFound())
 
     [<HttpPut("{todoId}/tasks/{taskId}")>]
     member this.ChangeStatus(todoId: int64, taskId: int64,  [<FromQuery>] status: StatusDto) =
-        let taskId = Id.from taskId
-        let todoOpt = todoId |> Id.from |> repo.TryGet
-        match todoOpt with
-        | Some todo ->
-            let taskOpt = tryFindTask taskId todo.Tasks
-            match taskOpt with
-            | Some task ->
+        let tryChangeStatus todo =
+            let replace (task: Task) =
                 let replaceOrPassthru x =
                     if x = task
-                    then { x with Status = status |> toStatus }
+                    then { x with Status = toStatus status }
                     else x
                 let newTodo = { todo with Tasks = todo.Tasks |> List.map replaceOrPassthru }
                 repo.Upsert newTodo
-                toTodoDto newTodo |> this.Ok :> IActionResult
-            | None -> this.NotFound() :> IActionResult
-        | None ->
-            this.NotFound() :> IActionResult
+                toTodoDto newTodo |> this.ok
+            todo.Tasks
+            |> tryFindTask (Id.from taskId)
+            |> Option.fold (fun _ x -> replace x) (this.notFound())
+        todoId
+        |> Id.from
+        |> repo.TryGet
+        |> Option.fold (fun _ x -> tryChangeStatus x) (this.notFound())
 
     [<HttpDelete("{todoId}")>]
     member this.DeleteTodoList(todoId: int64) =
         let removed = todoId |> Id.from |> repo.Remove
-        if removed then
-            this.Ok() :> IActionResult
-        else
-            this.NotFound() :> IActionResult
+        match removed with
+        | true -> this.ok()
+        | false -> this.notFound()
 
     [<HttpDelete("{todoId}/tasks/{taskId}")>]
     member this.DeleteTask(todoId: int64, taskId: int64) =
-        let taskId = Id.from taskId
-        let todoOpt = todoId |> Id.from |> repo.TryGet
-        match todoOpt with
-        | Some todo ->
-            let taskOpt = tryFindTask taskId todo.Tasks
-            match taskOpt with
-            | Some task ->
-                let newTodo = { todo with Tasks = todo.Tasks |> List.except [ task ] }
-                repo.Upsert newTodo
-                toTodoDto newTodo |> this.Ok :> IActionResult
-            | None -> this.NotFound() :> IActionResult
-        | None ->
-            this.NotFound() :> IActionResult
+        let tryDeleteTask todo =
+            let delete task =
+                let updated = { todo with Tasks = todo.Tasks |> List.except [ task ] }
+                repo.Upsert updated
+                updated |> toTodoDto |> this.ok
+            todo.Tasks
+            |> tryFindTask (Id.from taskId)
+            |> Option.fold (fun _ x -> delete x) (this.notFound())
+        todoId
+        |> Id.from
+        |> repo.TryGet
+        |> Option.fold (fun _ x -> tryDeleteTask x) (this.notFound())
