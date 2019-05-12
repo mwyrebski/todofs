@@ -50,6 +50,10 @@ type TodosController(repo: TodosRepository) =
     member private this.ok x = this.Ok x :> IActionResult
     member private this.notFound() = this.NotFound() :> IActionResult
     member private this.noContent() = this.NoContent() :> IActionResult
+    member private this.okOrNotFound f o =
+        match o with
+        | Some x -> f x |> this.ok
+        | None -> this.notFound()
 
     [<HttpGet>]
     member this.GetTodoLists() =
@@ -61,25 +65,27 @@ type TodosController(repo: TodosRepository) =
         todoId
         |> Id.from
         |> repo.TryGet
-        |> Option.fold (fun _ x -> x |> toTodoDto |> this.ok) (this.notFound())
+        |> this.okOrNotFound toTodoDto
 
     [<HttpGet("{todoId}/tasks")>]
     member this.GetTasks(todoId: int64) =
+        let getTasks todo =
+            todo.Tasks |> List.map toTaskDto
         todoId
         |> Id.from
         |> repo.TryGet
-        |> Option.fold (fun _ x -> x.Tasks |> List.map toTaskDto |> this.ok) (this.notFound())
+        |> this.okOrNotFound getTasks
 
     [<HttpGet("{todoId}/tasks/{taskId}")>]
     member this.GetTask(todoId: int64, taskId: int64) =
         let tryGetTask todo =
             todo.Tasks
             |> tryFindTask (Id.from taskId)
-            |> Option.fold (fun _ x -> toTaskDto x |> this.ok) (this.notFound())
+            |> this.okOrNotFound toTaskDto
         todoId
         |> Id.from
         |> repo.TryGet
-        |> Option.fold (fun _ x -> tryGetTask x) (this.notFound())
+        |> this.okOrNotFound tryGetTask
 
     [<HttpPost>]
     member this.AddTodoList( [<FromBody>] name: string) =
@@ -96,7 +102,7 @@ type TodosController(repo: TodosRepository) =
         todoId
         |> Id.from
         |> repo.TryGet
-        |> Option.fold (fun _ x -> rename x) (this.notFound())
+        |> this.okOrNotFound rename
 
     [<HttpPost("{todoId}/tasks")>]
     member this.AddTask(todoId: int64,  [<FromBody>] title: string) =
@@ -108,7 +114,7 @@ type TodosController(repo: TodosRepository) =
         todoId
         |> Id.from
         |> repo.TryGet
-        |> Option.fold (fun _ x -> create x) (this.notFound())
+        |> this.okOrNotFound create
 
     [<HttpPatch("{todoId}/tasks/{taskId}")>]
     member this.RenameTask(todoId: int64, taskId: int64,  [<FromBody>] title: string) =
@@ -123,11 +129,11 @@ type TodosController(repo: TodosRepository) =
                 toTodoDto newTodo |> this.ok
             todo.Tasks
             |> tryFindTask (Id.from taskId)
-            |> Option.fold (fun _ x -> rename x) (this.notFound())
+            |> this.okOrNotFound rename
         todoId
         |> Id.from
         |> repo.TryGet
-        |> Option.fold (fun _ x -> tryRenameTodo x) (this.notFound())
+        |> this.okOrNotFound tryRenameTodo
 
     [<HttpPut("{todoId}/tasks/{taskId}")>]
     member this.ChangeStatus(todoId: int64, taskId: int64,  [<FromQuery>] status: StatusDto) =
@@ -142,11 +148,11 @@ type TodosController(repo: TodosRepository) =
                 toTodoDto newTodo |> this.ok
             todo.Tasks
             |> tryFindTask (Id.from taskId)
-            |> Option.fold (fun _ x -> replace x) (this.notFound())
+            |> this.okOrNotFound replace
         todoId
         |> Id.from
         |> repo.TryGet
-        |> Option.fold (fun _ x -> tryChangeStatus x) (this.notFound())
+        |> this.okOrNotFound tryChangeStatus
 
     [<HttpDelete("{todoId}")>]
     member this.DeleteTodoList(todoId: int64) =
@@ -164,8 +170,8 @@ type TodosController(repo: TodosRepository) =
                 updated |> toTodoDto |> this.ok
             todo.Tasks
             |> tryFindTask (Id.from taskId)
-            |> Option.fold (fun _ x -> delete x) (this.notFound())
+            |> this.okOrNotFound delete
         todoId
         |> Id.from
         |> repo.TryGet
-        |> Option.fold (fun _ x -> tryDeleteTask x) (this.notFound())
+        |> this.okOrNotFound tryDeleteTask
