@@ -6,16 +6,16 @@ open TodoFs
 
 type TodosRepository(cache: IMemoryCache) =
 
-    let mutable data: TodoList list = []
+    let mutable data: Todo list = []
 
     member this.All() = data
 
-    member this.TryGet id: TodoList option =
+    member this.TryGet id: Todo option =
         List.tryFind (fun x -> x.Id = id) data
 
-    member this.Upsert(todo: TodoList) =
+    member this.Upsert(todo: Todo) =
         let mutable replaced = false
-        let tryReplace (d: TodoList) =
+        let tryReplace (d: Todo) =
             if d.Id = todo.Id
             then
                 replaced <- true

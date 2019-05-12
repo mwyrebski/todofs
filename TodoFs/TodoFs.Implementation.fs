@@ -4,7 +4,7 @@ open System
 open TodoFs
 open TodoFs.Common
 
-// Task
+// Tasks
 
 let createTask title =
     {Id = Id.create(); Title = title; Status = Undone}
@@ -16,7 +16,7 @@ let doTask task =
     {task with Status = Done}
 
 
-// TodoList
+// Todos
 
 let createTodo name =
     {Id = Id.create(); Name = name; Tasks = []}

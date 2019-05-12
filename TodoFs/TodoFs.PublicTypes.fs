@@ -12,8 +12,8 @@ type Task = {
     Status: Status
     }
 
-type TodoList = {
-    Id : Id
+type Todo = {
+    Id: Id
     Name: string
     Tasks: Task list
     }

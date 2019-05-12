@@ -29,7 +29,7 @@ type TodoIdParam = { todoId: int64 }
 type TodosController(repo: TodosRepository) =
     inherit ControllerBase()
 
-    let toTodoDto (x: TodoList) =
+    let toTodoDto (x: Todo) =
         { Id = x.Id.Value; Name = x.Name; TasksCount = List.length x.Tasks }
 
     let toTaskDto (x: Task) =
@@ -56,12 +56,12 @@ type TodosController(repo: TodosRepository) =
         | None -> this.notFound()
 
     [<HttpGet>]
-    member this.GetTodoLists() =
+    member this.GetTodos() =
         let todos = repo.All() |> List.map toTodoDto
         ActionResult<TodoDto list>(todos)
 
     [<HttpGet("{todoId}")>]
-    member this.GetTodoList(todoId: int64) =
+    member this.GetTodo(todoId: int64) =
         todoId
         |> Id.from
         |> repo.TryGet
@@ -88,13 +88,13 @@ type TodosController(repo: TodosRepository) =
         |> this.okOrNotFound tryGetTask
 
     [<HttpPost>]
-    member this.AddTodoList( [<FromBody>] name: string) =
+    member this.AddTodo( [<FromBody>] name: string) =
         let todo = createTodo name
         repo.Upsert todo
-        this.CreatedAtAction("GetTodoList", { todoId = todo.Id.Value }, todo |> toTodoDto)
+        this.CreatedAtAction("GetTodo", { todoId = todo.Id.Value }, todo |> toTodoDto)
 
     [<HttpPut("{todoId}")>]
-    member this.RenameTodoList(todoId: int64,  [<FromBody>] name: string) =
+    member this.RenameTodo(todoId: int64,  [<FromBody>] name: string) =
         let rename todo =
             renameTodo todo name
             |> repo.Upsert
@@ -155,7 +155,7 @@ type TodosController(repo: TodosRepository) =
         |> this.okOrNotFound tryChangeStatus
 
     [<HttpDelete("{todoId}")>]
-    member this.DeleteTodoList(todoId: int64) =
+    member this.DeleteTodo(todoId: int64) =
         let removed = todoId |> Id.from |> repo.Remove
         match removed with
         | true -> this.ok()

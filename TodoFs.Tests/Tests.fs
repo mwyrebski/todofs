@@ -36,7 +36,7 @@ let ``createTodo should create Todo list with empty Tasks`` () =
     actual.Tasks |> should be Empty
 
 [<Fact>]
-let ``addTask should return new TodoList with expected task added`` () =
+let ``addTask should return new Todo with expected task added`` () =
     let todo = createTodo "any-name"
     let task = createTask "any-title"
 
@@ -45,7 +45,7 @@ let ``addTask should return new TodoList with expected task added`` () =
     actual.Tasks |> should contain task
 
 [<Fact>]
-let ``addTasks should return new TodoList with expected tasks added`` () =
+let ``addTasks should return new Todo with expected tasks added`` () =
     let todo = createTodo "any-name"
     let task1 = createTask "any-title"
     let task2 = createTask "any-title"
@@ -56,15 +56,15 @@ let ``addTasks should return new TodoList with expected tasks added`` () =
     actual.Tasks |> should contain task2
 
 [<Fact>]
-let ``markDone should return new TodoList with specific task with status Done`` () =
+let ``markDone should return new Todo with specific task with status Done`` () =
     let expected = createTask "some-title"
-    let todoList = addTasks (createTodo "any-name") [
+    let todo = addTasks (createTodo "any-name") [
             createTask "any-title-1"
             expected
             createTask "any-title-2"
         ]
 
-    let actual = markDone todoList expected
+    let actual = markDone todo expected
 
     actual.Tasks.[0].Status |> should equal Undone
     actual.Tasks.[1].Status |> should equal Done
@@ -72,7 +72,7 @@ let ``markDone should return new TodoList with specific task with status Done`` 
 
 [<Fact>]
 let ``toString should generate expected string representation`` () =
-    let todoList = addTasks (createTodo "any-name") [
+    let todo = addTasks (createTodo "any-name") [
             createTask "any-title-1"
             createTask "any-title-2" |> doTask
             createTask "any-title-3"
@@ -87,7 +87,7 @@ let ``toString should generate expected string representation`` () =
         ""
         ]
 
-    let actual = toString todoList
+    let actual = toString todo
 
     actual |> should equal expected
 
