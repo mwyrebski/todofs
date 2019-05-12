@@ -28,13 +28,8 @@ type TodosRepository(cache: IMemoryCache) =
         else
             data <- todo :: data
 
-    member this.Remove id =
-        let filtered = List.filter (fun x -> x.Id <> id) data
-        if data <> filtered then
-            data <- filtered
-            true
-        else 
-            false
+    member this.Remove todo =
+        data <- List.except [todo] data
 
     interface IDisposable with
         member this.Dispose() = cache.Dispose()

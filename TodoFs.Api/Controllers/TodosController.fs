@@ -156,10 +156,10 @@ type TodosController(repo: TodosRepository) =
 
     [<HttpDelete("{todoId}")>]
     member this.DeleteTodo(todoId: int64) =
-        let removed = todoId |> Id.from |> repo.Remove
-        match removed with
-        | true -> this.ok()
-        | false -> this.notFound()
+        todoId
+        |> Id.from
+        |> repo.TryGet
+        |> this.okOrNotFound repo.Remove
 
     [<HttpDelete("{todoId}/tasks/{taskId}")>]
     member this.DeleteTask(todoId: int64, taskId: int64) =
