@@ -47,13 +47,11 @@ type TodosController(repo: TodosRepository) =
 
     let tryFindTask id = List.tryFind (fun (x: Task) -> x.Id = id)
 
-    member private this.ok x = this.Ok x :> IActionResult
-    member private this.notFound() = this.NotFound() :> IActionResult
     member private this.noContent() = this.NoContent() :> IActionResult
     member private this.okOrNotFound f o =
         match o with
-        | Some x -> f x |> this.ok
-        | None -> this.notFound()
+        | Some x -> f x |> this.Ok :> IActionResult
+        | None -> this.NotFound() :> IActionResult
 
     [<HttpGet>]
     member this.GetTodos() =
@@ -98,7 +96,6 @@ type TodosController(repo: TodosRepository) =
         let rename todo =
             renameTodo todo name
             |> repo.Upsert
-            |> this.ok
         todoId
         |> Id.from
         |> repo.TryGet
@@ -126,7 +123,7 @@ type TodosController(repo: TodosRepository) =
                     else x
                 let newTodo = { todo with Tasks = todo.Tasks |> List.map renameOrPassthru }
                 repo.Upsert newTodo
-                toTodoDto newTodo |> this.ok
+                toTodoDto newTodo
             todo.Tasks
             |> tryFindTask (Id.from taskId)
             |> this.okOrNotFound rename
@@ -145,7 +142,7 @@ type TodosController(repo: TodosRepository) =
                     else x
                 let newTodo = { todo with Tasks = todo.Tasks |> List.map replaceOrPassthru }
                 repo.Upsert newTodo
-                toTodoDto newTodo |> this.ok
+                toTodoDto newTodo
             todo.Tasks
             |> tryFindTask (Id.from taskId)
             |> this.okOrNotFound replace
@@ -167,7 +164,7 @@ type TodosController(repo: TodosRepository) =
             let delete task =
                 let updated = { todo with Tasks = todo.Tasks |> List.except [ task ] }
                 repo.Upsert updated
-                updated |> toTodoDto |> this.ok
+                updated |> toTodoDto
             todo.Tasks
             |> tryFindTask (Id.from taskId)
             |> this.okOrNotFound delete
