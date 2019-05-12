@@ -14,24 +14,19 @@ type TodosRepository(cache: IMemoryCache) =
         List.tryFind (fun x -> x.Id = id) data
 
     member this.Upsert(todo: Todo) =
-        let mutable replaced = false
-        let tryReplace (d: Todo) =
-            if d.Id = todo.Id
-            then
-                replaced <- true
-                todo
-            else
-                d
-        let newData = List.map tryReplace data
-        if replaced then
-            data <- newData
-        else
-            data <- todo :: data
+        let predicate x = x.Id = todo.Id
+        let replace t =
+            if predicate t
+            then todo
+            else t
+        let exists = List.exists predicate data
+        match exists with
+        | true -> data <- List.map replace data
+        | false -> data <- todo :: data
 
     member this.Remove todo =
-        data <- List.except [todo] data
+        data <- List.except [ todo ] data
 
     interface IDisposable with
-        member this.Dispose() = cache.Dispose()
-
-
+        member this.Dispose() =
+            cache.Dispose()
