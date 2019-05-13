@@ -31,13 +31,13 @@ let ``doTask should return new Task with status Done`` () =
 
 [<Fact>]
 let ``createTodo should create Todo list with empty Tasks`` () =
-    let actual = createTodo "any-name"
+    let actual = createTodo (Name "any-name")
 
     actual.Tasks |> should be Empty
 
 [<Fact>]
 let ``addTask should return new Todo with expected task added`` () =
-    let todo = createTodo "any-name"
+    let todo = createTodo (Name "any-name")
     let task = createTask "any-title"
 
     let actual = addTask todo task
@@ -46,7 +46,7 @@ let ``addTask should return new Todo with expected task added`` () =
 
 [<Fact>]
 let ``addTasks should return new Todo with expected tasks added`` () =
-    let todo = createTodo "any-name"
+    let todo = createTodo (Name "any-name")
     let task1 = createTask "any-title"
     let task2 = createTask "any-title"
 
@@ -58,7 +58,7 @@ let ``addTasks should return new Todo with expected tasks added`` () =
 [<Fact>]
 let ``markDone should return new Todo with specific task with status Done`` () =
     let expected = createTask "some-title"
-    let todo = addTasks (createTodo "any-name") [
+    let todo = addTasks (createTodo (Name "any-name")) [
             createTask "any-title-1"
             expected
             createTask "any-title-2"
@@ -72,7 +72,7 @@ let ``markDone should return new Todo with specific task with status Done`` () =
 
 [<Fact>]
 let ``toString should generate expected string representation`` () =
-    let todo = addTasks (createTodo "any-name") [
+    let todo = addTasks (createTodo (Name "any-name")) [
             createTask "any-title-1"
             createTask "any-title-2" |> doTask
             createTask "any-title-3"

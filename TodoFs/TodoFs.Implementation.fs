@@ -47,7 +47,7 @@ let toString todo =
         todo.Tasks
         |> Seq.map (fun t -> sprintf "[%c] %s" (doneChar t) t.Title)
     seq {
-        let header = sprintf "..:: %s ::.." todo.Name
+        let header = sprintf "..:: %s ::.." todo.Name.Value
         yield String.Empty
         yield header
         yield String.replicate (String.length header) "-" 

@@ -1,5 +1,6 @@
-﻿namespace TodoFs.Api.Controllers
+namespace TodoFs.Api.Controllers
 
+open System
 open TodoFs.Api.Data
 open Microsoft.AspNetCore.Mvc
 open TodoFs
@@ -30,7 +31,7 @@ type TodosController(repo: TodosRepository) as self =
     inherit ControllerBase()
 
     let toTodoDto (x: Todo) =
-        { Id = x.Id.Value; Name = x.Name; TasksCount = List.length x.Tasks }
+        { Id = x.Id.Value; Name = x.Name.Value; TasksCount = List.length x.Tasks }
 
     let toTaskDto (x: Task) =
         let status =
@@ -48,12 +49,21 @@ type TodosController(repo: TodosRepository) as self =
     let tryFindTask id = List.tryFind (fun (x: Task) -> x.Id = id)
 
     let createdAt actionName routeValues value = 
-        self.CreatedAtAction(actionName, routeValues, value)
+        self.CreatedAtAction(actionName, routeValues, value) :> IActionResult
     let noContent () = self.NoContent() :> IActionResult
     let okOrNotFound f o =
         match o with
         | Some x -> f x |> self.Ok :> IActionResult
         | None -> self.NotFound() :> IActionResult
+    let badRequest (e:obj) = e |> self.BadRequest :> IActionResult
+    let toResponse okResp errResp result =
+        match result with
+        | Ok o -> okResp o
+        | Error e -> errResp e
+    
+    let validateName n =
+        if String.IsNullOrWhiteSpace n then Result.Error "Todo name cannot be empty"
+        else n.Trim() |> Name |> Result.Ok
 
     [<HttpGet>]
     member __.GetTodos() =
@@ -89,14 +99,17 @@ type TodosController(repo: TodosRepository) as self =
 
     [<HttpPost>]
     member __.AddTodo( [<FromBody>] name: string) =
-        let todo = createTodo name
-        repo.Upsert todo
-        createdAt "GetTodo" { todoId = todo.Id.Value } (todo |> toTodoDto)
+        let todoCreated (t:Todo) =
+            createdAt "GetTodo" { todoId = t.Id.Value } (toTodoDto t)
+        validateName name
+        |> Result.map createTodo
+        |> Result.map (tee repo.Upsert)
+        |> toResponse todoCreated badRequest
 
     [<HttpPut("{todoId}")>]
     member __.RenameTodo(todoId: int64,  [<FromBody>] name: string) =
         let rename todo =
-            renameTodo todo name
+            renameTodo todo (Name name)
             |> repo.Upsert
         todoId
         |> Id.from
