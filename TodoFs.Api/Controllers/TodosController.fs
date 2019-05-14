@@ -1,6 +1,5 @@
 ﻿namespace TodoFs.Api.Controllers
 
-open System
 open TodoFs.Api.Data
 open Microsoft.AspNetCore.Mvc
 open TodoFs
@@ -24,6 +23,17 @@ and StatusDto =
 
 type TodoIdParam = { todoId: int64 }
 
+module Result =
+    let toResponse okResp errResp result =
+        match result with
+        | Ok o -> okResp o
+        | Error e -> errResp e
+
+module Option =
+    let toResponse someResp noneResp opt =
+        match opt with
+        | Some o -> someResp o
+        | None -> noneResp()
 
 [<Route("api/[controller]")>]
 [<ApiController>]
@@ -52,16 +62,12 @@ type TodosController(repo: TodosRepository) as self =
         self.CreatedAtAction(actionName, routeValues, value) :> IActionResult
     let noContent() = self.NoContent() :> IActionResult
     let notFound() = self.NotFound() :> IActionResult
-    let okOrNotFound f o =
-        match o with
-        | Some x -> f x |> self.Ok :> IActionResult
-        | None -> self.NotFound() :> IActionResult
     let badRequest (e: obj) = e |> self.BadRequest :> IActionResult
     let ok x = x |> self.Ok :> IActionResult
-    let toResponse okResp errResp result =
-        match result with
-        | Ok o -> okResp o
-        | Error e -> errResp e
+    let okOrNotFound okFunc option =
+        option
+        |> Option.map okFunc
+        |> Option.toResponse ok notFound 
 
     let validateName (n: string) =
         if isNull n then Result.Error "Todo name cannot be null"
@@ -110,7 +116,7 @@ type TodosController(repo: TodosRepository) as self =
         validateName name
         |> Result.map createTodo
         |> Result.map (tee repo.Upsert)
-        |> toResponse todoCreated badRequest
+        |> Result.toResponse todoCreated badRequest
 
     [<HttpPut("{todoId}")>]
     member __.RenameTodo(todoId: int64,  [<FromBody>] name: string) =
@@ -119,7 +125,7 @@ type TodosController(repo: TodosRepository) as self =
             |> Result.map (renameTodo todo)
             |> Result.map (tee repo.Upsert)
             |> Result.map toTodoDto
-            |> toResponse ok badRequest
+            |> Result.toResponse ok badRequest
         todoId
         |> Id.from
         |> repo.TryGet
@@ -155,7 +161,8 @@ type TodosController(repo: TodosRepository) as self =
         todoId
         |> Id.from
         |> repo.TryGet
-        |> okOrNotFound tryRenameTodo
+        |> Option.map tryRenameTodo
+        |> Option.defaultWith notFound
 
     [<HttpPut("{todoId}/tasks/{taskId}")>]
     member __.ChangeStatus(todoId: int64, taskId: int64,  [<FromQuery>] status: StatusDto) =
@@ -174,7 +181,8 @@ type TodosController(repo: TodosRepository) as self =
         todoId
         |> Id.from
         |> repo.TryGet
-        |> okOrNotFound tryChangeStatus
+        |> Option.map tryChangeStatus
+        |> Option.defaultWith notFound
 
     [<HttpDelete("{todoId}")>]
     member __.DeleteTodo(todoId: int64) =
@@ -196,4 +204,5 @@ type TodosController(repo: TodosRepository) as self =
         todoId
         |> Id.from
         |> repo.TryGet
-        |> okOrNotFound tryDeleteTask
+        |> Option.map tryDeleteTask
+        |> Option.defaultWith notFound
