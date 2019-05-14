@@ -1,4 +1,4 @@
-namespace TodoFs.Api.Controllers
+﻿namespace TodoFs.Api.Controllers
 
 open System
 open TodoFs.Api.Data
@@ -48,22 +48,28 @@ type TodosController(repo: TodosRepository) as self =
 
     let tryFindTask id = List.tryFind (fun (x: Task) -> x.Id = id)
 
-    let createdAt actionName routeValues value = 
+    let createdAt actionName routeValues value =
         self.CreatedAtAction(actionName, routeValues, value) :> IActionResult
-    let noContent () = self.NoContent() :> IActionResult
+    let noContent() = self.NoContent() :> IActionResult
+    let notFound() = self.NotFound() :> IActionResult
     let okOrNotFound f o =
         match o with
         | Some x -> f x |> self.Ok :> IActionResult
         | None -> self.NotFound() :> IActionResult
-    let badRequest (e:obj) = e |> self.BadRequest :> IActionResult
+    let badRequest (e: obj) = e |> self.BadRequest :> IActionResult
+    let ok x = x |> self.Ok :> IActionResult
     let toResponse okResp errResp result =
         match result with
         | Ok o -> okResp o
         | Error e -> errResp e
-    
-    let validateName n =
-        if String.IsNullOrWhiteSpace n then Result.Error "Todo name cannot be empty"
-        else n.Trim() |> Name |> Result.Ok
+
+    let validateName (n: string) =
+        if isNull n then Result.Error "Todo name cannot be null"
+        else
+            let n = n.Trim()
+            if n.Length = 0 then Result.Error "Todo name cannot be empty"
+            elif n.Length > 100 then Result.Error "Todo name cannot be longer than 100"
+            else Name n |> Result.Ok
 
     [<HttpGet>]
     member __.GetTodos() =
@@ -99,7 +105,7 @@ type TodosController(repo: TodosRepository) as self =
 
     [<HttpPost>]
     member __.AddTodo( [<FromBody>] name: string) =
-        let todoCreated (t:Todo) =
+        let todoCreated (t: Todo) =
             createdAt "GetTodo" { todoId = t.Id.Value } (toTodoDto t)
         validateName name
         |> Result.map createTodo
@@ -109,12 +115,16 @@ type TodosController(repo: TodosRepository) as self =
     [<HttpPut("{todoId}")>]
     member __.RenameTodo(todoId: int64,  [<FromBody>] name: string) =
         let rename todo =
-            renameTodo todo (Name name)
-            |> repo.Upsert
+            validateName name
+            |> Result.map (renameTodo todo)
+            |> Result.map (tee repo.Upsert)
+            |> Result.map toTodoDto
+            |> toResponse ok badRequest
         todoId
         |> Id.from
         |> repo.TryGet
-        |> okOrNotFound rename
+        |> Option.map rename
+        |> Option.defaultWith notFound
 
     [<HttpPost("{todoId}/tasks")>]
     member __.AddTask(todoId: int64,  [<FromBody>] title: string) =
