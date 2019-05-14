@@ -1,0 +1,45 @@
+### Get todos
+GET https://localhost:5001/api/todos
+
+### Get single todo
+GET https://localhost:5001/api/todos/1
+
+### Get tasks
+GET https://localhost:5001/api/todos/1/tasks
+
+
+### Add todo
+POST https://localhost:5001/api/todos
+Content-Type: application/json
+
+"Todo list"
+
+### Add task
+POST https://localhost:5001/api/todos/1/tasks
+Content-Type: application/json
+
+"Task name"
+
+### Rename todo
+PUT https://localhost:5001/api/todos/1
+Content-Type: application/json
+
+"Todo renamed"
+
+### Mark task as Done
+PUT https://localhost:5001/api/todos/1/tasks/2?status=Done
+
+### Rename task
+PATCH https://localhost:5001/api/todos/1/tasks/2
+Content-Type: application/json
+
+"Task renamed"
+
+### Delete single todo
+DELETE https://localhost:5001/api/todos/0
+
+### Delete single task
+DELETE https://localhost:5001/api/todos/1/tasks/3
+
+### Delete todo list
+DELETE https://localhost:5001/api/todos/2

@@ -20,4 +20,8 @@
     <ProjectReference Include="..\TodoFs\TodoFs.fsproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Include="todofs.http" />
+  </ItemGroup>
+
 </Project>
