@@ -6,12 +6,19 @@ open TodoFs
 
 type TodosRepository(cache: IMemoryCache) =
 
-    let mutable data: Todo list = []
+    [<Literal>]
+    let cacheKey = "todos-repository"
 
-    member this.All() = data
+    let data(): Todo list =
+        cache.GetOrCreate(cacheKey, (fun _ -> []))
+
+    let save (value: Todo list) =
+        cache.Set(cacheKey, value)
+
+    member this.All() = data()
 
     member this.TryGet id: Todo option =
-        List.tryFind (fun x -> x.Id = id) data
+        data() |> List.tryFind (fun x -> x.Id = id)
 
     member this.Upsert(todo: Todo) =
         let predicate x = x.Id = todo.Id
@@ -19,13 +26,18 @@ type TodosRepository(cache: IMemoryCache) =
             if predicate t
             then todo
             else t
+        let data = data()
         let exists = List.exists predicate data
         match exists with
-        | true -> data <- List.map replace data
-        | false -> data <- todo :: data
+        | true -> data |> List.map replace
+        | false -> todo :: data
+        |> save
+        |> ignore
 
     member this.Remove todo =
-        data <- List.except [ todo ] data
+        data()
+        |> List.except [ todo ]
+        |> save
 
     interface IDisposable with
         member this.Dispose() =
