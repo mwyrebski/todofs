@@ -69,14 +69,6 @@ type TodosController(repo: TodosRepository) as self =
         |> Option.map okFunc
         |> Option.toResponse ok notFound 
 
-    let validateName (n: string) =
-        if isNull n then Result.Error "Todo name cannot be null"
-        else
-            let n = n.Trim()
-            if n.Length = 0 then Result.Error "Todo name cannot be empty"
-            elif n.Length > 100 then Result.Error "Todo name cannot be longer than 100"
-            else Name n |> Result.Ok
-
     [<HttpGet>]
     member __.GetTodos() =
         let todos = repo.All() |> List.map toTodoDto
@@ -113,7 +105,7 @@ type TodosController(repo: TodosRepository) as self =
     member __.AddTodo( [<FromBody>] name: string) =
         let todoCreated (t: Todo) =
             createdAt "GetTodo" { todoId = t.Id.Value } (toTodoDto t)
-        validateName name
+        Name.create name
         |> Result.map createTodo
         |> Result.map (tee repo.Upsert)
         |> Result.toResponse todoCreated badRequest
@@ -121,7 +113,7 @@ type TodosController(repo: TodosRepository) as self =
     [<HttpPut("{todoId}")>]
     member __.RenameTodo(todoId: int64,  [<FromBody>] name: string) =
         let rename todo =
-            validateName name
+            Name.create name
             |> Result.map (renameTodo todo)
             |> Result.map (tee repo.Upsert)
             |> Result.map toTodoDto

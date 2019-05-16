@@ -4,6 +4,16 @@ open System
 open TodoFs
 open TodoFs.Common
 
+module Name =
+    let create (n: string) =
+        if isNull n then
+            Result.Error "Todo name cannot be null"
+        else
+            let n = n.Trim()
+            if n.Length = 0 then Result.Error "Todo name cannot be empty"
+            elif n.Length > 100 then Result.Error "Todo name cannot be longer than 100"
+            else Name n |> Result.Ok
+
 // Tasks
 
 let createTask title =
