@@ -7,6 +7,9 @@ GET https://localhost:5001/api/todos/1
 ### Get tasks
 GET https://localhost:5001/api/todos/1/tasks
 
+### Get task
+GET https://localhost:5001/api/todos/1/tasks/1
+
 
 ### Add todo
 POST https://localhost:5001/api/todos

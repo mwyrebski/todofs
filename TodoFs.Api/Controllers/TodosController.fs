@@ -95,11 +95,12 @@ type TodosController(repo: TodosRepository) as self =
         let tryGetTask todo =
             todo.Tasks
             |> tryFindTask (Id.from taskId)
-            |> okOrNotFound toTaskDto
+            |> Option.map toTaskDto
         todoId
         |> Id.from
         |> repo.TryGet
-        |> okOrNotFound tryGetTask
+        |> Option.map tryGetTask
+        |> Option.toResponse ok notFound
 
     [<HttpPost>]
     member __.AddTodo( [<FromBody>] name: string) =
@@ -134,7 +135,8 @@ type TodosController(repo: TodosRepository) as self =
         todoId
         |> Id.from
         |> repo.TryGet
-        |> okOrNotFound create
+        |> Option.map create
+        |> Option.defaultWith notFound
 
     [<HttpPatch("{todoId}/tasks/{taskId}")>]
     member __.RenameTask(todoId: int64, taskId: int64,  [<FromBody>] title: string) =
