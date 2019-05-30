@@ -22,6 +22,8 @@ and StatusDto =
 
 
 type TodoIdParam = { todoId: int64 }
+type AddTaskRequest = { title: string; priority: string }
+type AddTodoRequest = { name: string; label: string }
 
 module Result =
     let toResponse okResp errResp result =
@@ -102,11 +104,16 @@ type TodosController(repo: TodosRepository) as self =
         |> okOrNotFound tryGetTask
 
     [<HttpPost>]
-    member __.AddTodo( [<FromBody>] name: string) =
+    member __.AddTodo( [<FromBody>] request) =
         let todoCreated (t: Todo) =
             createdAt "GetTodo" { todoId = t.Id.Value } (toTodoDto t)
-        Name.create name
-        |> Result.map createTodo
+        Name.create request.name
+        |> Result.bind (fun n ->
+            Label.create request.label
+            |> Result.bind
+                   (fun l -> createTodo n
+                             |> addLabelTodo l
+                             |> Ok))
         |> Result.map (tee repo.Upsert)
         |> Result.toResponse todoCreated badRequest
 
@@ -125,9 +132,9 @@ type TodosController(repo: TodosRepository) as self =
         |> Option.defaultWith notFound
 
     [<HttpPost("{todoId}/tasks")>]
-    member __.AddTask(todoId: int64,  [<FromBody>] title: string) =
+    member __.AddTask(todoId: int64,  [<FromBody>] request) =
         let create todo =
-            createTask title
+            createTask request.title
             |> addTask todo
             |> repo.Upsert
             |> noContent

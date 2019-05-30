@@ -17,8 +17,11 @@ type Name = Name of string with
         let (Name value) = this
         value
 
+type Label = Label of string
+
 type Todo = {
     Id: Id
     Name: Name
+    Label: Label
     Tasks: Task list
     }

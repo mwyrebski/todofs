@@ -14,6 +14,17 @@ module Name =
             elif n.Length > 100 then Result.Error "Todo name cannot be longer than 100"
             else Name n |> Result.Ok
 
+module Label =
+    let empty = Label ""
+    let create (n: string) =
+        if isNull n then
+            Result.Error "Label cannot be null"
+        else
+            let n = n.Trim()
+            if n.Length = 0 then Result.Error "Label cannot be empty"
+            elif n.Length > 20 then Result.Error "Label cannot be longer than 20"
+            else Label n |> Result.Ok
+            
 // Tasks
 
 let createTask title =
@@ -29,7 +40,10 @@ let doTask task =
 // Todos
 
 let createTodo name =
-    {Id = Id.create(); Name = name; Tasks = []}
+    {Id = Id.create(); Name = name; Tasks = []; Label = Label.empty }
+    
+let addLabelTodo label todo =
+    {todo with Label = label}
     
 let renameTodo todo name =
     {todo with Name = name}

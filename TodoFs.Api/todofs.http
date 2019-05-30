@@ -18,7 +18,7 @@ Content-Type: application/json
 POST https://localhost:5001/api/todos/1/tasks
 Content-Type: application/json
 
-"Task name"
+{"title": "Task name"}
 
 ### Rename todo
 PUT https://localhost:5001/api/todos/1
