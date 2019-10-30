@@ -12,7 +12,7 @@ GET https://localhost:5001/api/todos/1/tasks
 POST https://localhost:5001/api/todos
 Content-Type: application/json
 
-"Todo list"
+{"name": "Todo list", "label": "x" }
 
 ### Add task
 POST https://localhost:5001/api/todos/1/tasks
