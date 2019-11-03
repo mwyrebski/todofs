@@ -22,7 +22,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\TodoFs\TodoFs.fsproj" />
+    <ProjectReference Include="..\..\src\TodoFs.Domain\TodoFs.Domain.fsproj" />
   </ItemGroup>
 
 </Project>
