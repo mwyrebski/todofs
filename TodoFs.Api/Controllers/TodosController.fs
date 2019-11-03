@@ -200,7 +200,7 @@ type TodosController(repo: TodosRepository) as self =
         todoId
         |> Id.from
         |> repo.TryGet
-        |> okOrNotFound repo.Remove
+        |> okOrNotFound (fun x -> repo.Remove x |> ignore; self.Ok())
 
     [<HttpDelete("{todoId}/tasks/{taskId}")>]
     member __.DeleteTask(todoId: int64, taskId: int64) =
