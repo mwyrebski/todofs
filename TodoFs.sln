@@ -15,6 +15,10 @@ Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "TodoFs.Tests", "TodoFs.Test
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "TodoFs.Api", "TodoFs.Api\TodoFs.Api.fsproj", "{00C782FB-8E80-4DF2-912C-0EC4F7C0BD5A}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{A8106A3D-C43F-4A95-892D-6A9F559921C4}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{68179C91-A5CC-4741-A758-0F41CC8F74C0}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,5 +43,10 @@ Global
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {68FC78E4-EE97-4D37-A9B2-558FD3D93840}
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{C5A60203-7728-4FEF-B9D6-2B69671338C9} = {A8106A3D-C43F-4A95-892D-6A9F559921C4}
+		{00C782FB-8E80-4DF2-912C-0EC4F7C0BD5A} = {A8106A3D-C43F-4A95-892D-6A9F559921C4}
+		{9A3832E7-A02F-4B7F-9CE2-E675C1A2E4E4} = {68179C91-A5CC-4741-A758-0F41CC8F74C0}
 	EndGlobalSection
 EndGlobal
