@@ -20,6 +20,9 @@ and TaskDto = {
 and StatusDto =
     | Undone = 0
     | Done = 1
+and EnvelopeDto = {
+    Todos: TodoDto list
+    }
 
 
 type TodoIdParam = { todoId: int64 }
@@ -42,6 +45,9 @@ module Option =
 [<ApiController>]
 type TodosController(repo: TodosRepository) as self =
     inherit ControllerBase()
+    
+    let wrapWithEnvelope todos =
+        { Todos = todos }
 
     let toTaskDto (x: Task) =
         let status =
@@ -79,6 +85,7 @@ type TodosController(repo: TodosRepository) as self =
     member __.GetTodos() =
         repo.All()
         |> List.map toTodoDto
+        |> wrapWithEnvelope
         |> ok
 
     [<HttpGet("{todoId}")>]
