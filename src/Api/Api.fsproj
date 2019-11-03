@@ -9,7 +9,7 @@
 
   <ItemGroup>
     <Compile Include="TodosRepository.fs" />
-    <Compile Include="Controllers\TodosController.fs" />
+    <Compile Include="TodosController.fs" />
     <Compile Include="Startup.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
