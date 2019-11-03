@@ -1,4 +1,4 @@
-﻿namespace TodoFs.Api.Controllers
+namespace TodoFs.Api.Controllers
 
 open TodoFs.Api.Data
 open Microsoft.AspNetCore.Mvc
@@ -10,6 +10,7 @@ type TodoDto = {
     Id: int64
     Name: string
     TasksCount: int
+    Tasks: TaskDto list
     }
 and TaskDto = {
     Id: int64
@@ -42,15 +43,18 @@ module Option =
 type TodosController(repo: TodosRepository) as self =
     inherit ControllerBase()
 
-    let toTodoDto (x: Todo) =
-        { Id = x.Id.Value; Name = x.Name.Value; TasksCount = List.length x.Tasks }
-
     let toTaskDto (x: Task) =
         let status =
             match x.Status with
             | Undone -> StatusDto.Undone
             | Done -> StatusDto.Done
         { Id = x.Id.Value; Title = x.Title; Status = status }
+
+    let toTodoDto (x: Todo) =
+        { Id = x.Id.Value
+          Name = x.Name.Value
+          TasksCount = List.length x.Tasks
+          Tasks = List.map toTaskDto x.Tasks }
 
     let toStatus s =
         match s with
@@ -69,11 +73,11 @@ type TodosController(repo: TodosRepository) as self =
     let okOrNotFound okFunc option =
         option
         |> Option.map okFunc
-        |> Option.toResponse ok notFound 
+        |> Option.toResponse ok notFound
 
     [<HttpGet>]
     member __.GetTodos() =
-        repo.All() 
+        repo.All()
         |> List.map toTodoDto
         |> ok
 
@@ -86,7 +90,7 @@ type TodosController(repo: TodosRepository) as self =
 
     [<HttpGet("{todoId}/tasks")>]
     member __.GetTasks(todoId: int64) =
-        let getTasks todo =
+        let getTasks (todo: Todo) =
             todo.Tasks |> List.map toTaskDto
         todoId
         |> Id.from
@@ -95,7 +99,7 @@ type TodosController(repo: TodosRepository) as self =
 
     [<HttpGet("{todoId}/tasks/{taskId}")>]
     member __.GetTask(todoId: int64, taskId: int64) =
-        let tryGetTask todo =
+        let tryGetTask (todo: Todo) =
             todo.Tasks
             |> tryFindTask (Id.from taskId)
             |> okOrNotFound toTaskDto
@@ -146,7 +150,7 @@ type TodosController(repo: TodosRepository) as self =
 
     [<HttpPatch("{todoId}/tasks/{taskId}")>]
     member __.RenameTask(todoId: int64, taskId: int64,  [<FromBody>] title: string) =
-        let tryRenameTodo todo =
+        let tryRenameTodo (todo: Todo) =
             let rename task =
                 let renameOrPassthru x =
                     if x = task
@@ -166,7 +170,7 @@ type TodosController(repo: TodosRepository) as self =
 
     [<HttpPut("{todoId}/tasks/{taskId}")>]
     member __.ChangeStatus(todoId: int64, taskId: int64,  [<FromQuery>] status: StatusDto) =
-        let tryChangeStatus todo =
+        let tryChangeStatus (todo: Todo) =
             let replace (task: Task) =
                 let replaceOrPassthru x =
                     if x = task
@@ -193,7 +197,7 @@ type TodosController(repo: TodosRepository) as self =
 
     [<HttpDelete("{todoId}/tasks/{taskId}")>]
     member __.DeleteTask(todoId: int64, taskId: int64) =
-        let tryDeleteTask todo =
+        let tryDeleteTask (todo: Todo) =
             let delete task =
                 let updated = { todo with Tasks = todo.Tasks |> List.except [ task ] }
                 repo.Upsert updated
