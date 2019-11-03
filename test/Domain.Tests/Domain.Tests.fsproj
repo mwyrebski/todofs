@@ -5,6 +5,8 @@
 
     <IsPackable>false</IsPackable>
     <GenerateProgramFile>true</GenerateProgramFile>
+    <RootNamespace>TodoFs.Domain.Tests</RootNamespace>
+    <AssemblyName>TodoFs.Domain.Tests</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>
@@ -22,7 +24,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\TodoFs.Domain\TodoFs.Domain.fsproj" />
+    <ProjectReference Include="..\..\src\Domain\Domain.fsproj" />
   </ItemGroup>
 
 </Project>

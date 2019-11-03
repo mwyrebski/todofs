@@ -1,4 +1,4 @@
-﻿namespace TodoFs.Common
+﻿namespace TodoFs.Domain.Common
 
 type Id = private Id of int64 with
     member this.Value =

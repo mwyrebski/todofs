@@ -1,8 +1,8 @@
-﻿module TodoFs.Implementation
+﻿module TodoFs.Domain.Implementation
 
 open System
-open TodoFs
-open TodoFs.Common
+open TodoFs.Domain
+open TodoFs.Domain.Common
 
 module Name =
     let create (n: string) =

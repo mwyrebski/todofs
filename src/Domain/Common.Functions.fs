@@ -1,4 +1,4 @@
-﻿namespace TodoFs.Common
+﻿namespace TodoFs.Domain.Common
 
 open System
 

@@ -2,9 +2,9 @@ namespace TodoFs.Api.Controllers
 
 open TodoFs.Api.Data
 open Microsoft.AspNetCore.Mvc
-open TodoFs
-open TodoFs.Common
-open TodoFs.Implementation
+open TodoFs.Domain
+open TodoFs.Domain.Common
+open TodoFs.Domain.Implementation
 
 type TodoDto = {
     Id: int64

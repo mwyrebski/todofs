@@ -2,7 +2,7 @@ namespace TodoFs.Api.Data
 
 open System
 open Microsoft.Extensions.Caching.Memory
-open TodoFs
+open TodoFs.Domain
 
 type TodosRepository(cache: IMemoryCache) =
 

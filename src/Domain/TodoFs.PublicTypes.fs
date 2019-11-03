@@ -1,6 +1,6 @@
-﻿namespace TodoFs
+﻿namespace TodoFs.Domain
 
-open TodoFs.Common
+open TodoFs.Domain.Common
 
 type Status =
     | Undone

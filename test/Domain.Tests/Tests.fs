@@ -1,10 +1,10 @@
-module Tests
+module TodoFs.Domain.Tests
 
 open System
 open Xunit
 open FsUnit.Xunit
-open TodoFs
-open TodoFs.Implementation
+open TodoFs.Domain
+open TodoFs.Domain.Implementation
 
 [<Fact>]
 let ``createTask should create Task in status Undone`` () =
