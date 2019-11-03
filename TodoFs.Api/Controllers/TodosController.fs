@@ -73,8 +73,9 @@ type TodosController(repo: TodosRepository) as self =
 
     [<HttpGet>]
     member __.GetTodos() =
-        let todos = repo.All() |> List.map toTodoDto
-        ActionResult<TodoDto list>(todos)
+        repo.All() 
+        |> List.map toTodoDto
+        |> ok
 
     [<HttpGet("{todoId}")>]
     member __.GetTodo(todoId: int64) =
