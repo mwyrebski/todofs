@@ -1,11 +1,11 @@
 namespace TodoFs.Api
 
-open System.Text.Json.Serialization
 open TodoFs.Api.Data
 open Microsoft.AspNetCore.Builder
 open Microsoft.Extensions.Configuration
 open Microsoft.Extensions.DependencyInjection
 open Microsoft.Extensions.Hosting
+open Newtonsoft.Json.Converters
 
 type Startup private () =
     new(configuration: IConfiguration) as this =
@@ -16,8 +16,7 @@ type Startup private () =
     member this.ConfigureServices(services: IServiceCollection) =
         // Add framework services.
         services.AddControllers()
-            .AddNewtonsoftJson()
-            .AddJsonOptions(fun o -> o.JsonSerializerOptions.Converters.Add(JsonStringEnumConverter())) |> ignore
+            .AddNewtonsoftJson(fun o -> o.SerializerSettings.Converters.Add(StringEnumConverter())) |> ignore
         services.AddMemoryCache() |> ignore
         services.AddLogging() |> ignore
         services.AddSingleton<TodosRepository>() |> ignore
