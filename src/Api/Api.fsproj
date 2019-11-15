@@ -8,6 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="HttpResponses.fs" />
     <Compile Include="TodosRepository.fs" />
     <Compile Include="TodosController.fs" />
     <Compile Include="Startup.fs" />

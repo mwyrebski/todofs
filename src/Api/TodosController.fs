@@ -1,7 +1,8 @@
 namespace TodoFs.Api.Controllers
 
-open TodoFs.Api.Data
 open Microsoft.AspNetCore.Mvc
+open TodoFs.Api.Data
+open TodoFs.Api.HttpResponses
 open TodoFs.Domain
 open TodoFs.Domain.Common
 open TodoFs.Domain.Implementation
@@ -24,7 +25,6 @@ and EnvelopeDto = {
     Todos: TodoDto list
     }
 
-
 type TodoIdParam = { todoId: int64 }
 type AddTaskRequest = { title: string; priority: string }
 type AddTodoRequest = { name: string; label: string }
@@ -43,9 +43,9 @@ module Option =
 
 [<Route("api/[controller]")>]
 [<ApiController>]
-type TodosController(repo: TodosRepository) as self =
+type TodosController(repo: TodosRepository) =
     inherit ControllerBase()
-    
+
     let wrapWithEnvelope todos =
         { Todos = todos }
 
@@ -70,23 +70,17 @@ type TodosController(repo: TodosRepository) as self =
 
     let tryFindTask id = List.tryFind (fun (x: Task) -> x.Id = id)
 
-    let createdAt actionName routeValues value =
-        self.CreatedAtAction(actionName, routeValues, value) :> IActionResult
-    let noContent() = self.NoContent() :> IActionResult
-    let notFound() = self.NotFound() :> IActionResult
-    let badRequest (e: obj) = e |> self.BadRequest :> IActionResult
-    let ok x = x |> self.Ok :> IActionResult
     let okOrNotFound okFunc option =
         option
         |> Option.map okFunc
-        |> Option.toResponse ok notFound
+        |> Option.toResponse httpOkObject httpNotFound
 
     [<HttpGet>]
     member __.GetTodos() =
         repo.All()
         |> List.map toTodoDto
         |> wrapWithEnvelope
-        |> ok
+        |> httpOkObject
 
     [<HttpGet("{todoId}")>]
     member __.GetTodo(todoId: int64) =
@@ -118,7 +112,7 @@ type TodosController(repo: TodosRepository) as self =
     [<HttpPost>]
     member __.AddTodo( [<FromBody>] request) =
         let todoCreated (t: Todo) =
-            createdAt "GetTodo" { todoId = t.Id.Value } (toTodoDto t)
+            httpCreatedAt "GetTodo" { todoId = t.Id.Value } (toTodoDto t)
         Name.create request.name
         |> Result.bind (fun n ->
             Label.create request.label
@@ -127,7 +121,7 @@ type TodosController(repo: TodosRepository) as self =
                              |> addLabelTodo l
                              |> Ok))
         |> Result.map (tee repo.Upsert)
-        |> Result.toResponse todoCreated badRequest
+        |> Result.toResponse todoCreated httpBadRequestObject
 
     [<HttpPut("{todoId}")>]
     member __.RenameTodo(todoId: int64,  [<FromBody>] name: string) =
@@ -136,12 +130,12 @@ type TodosController(repo: TodosRepository) as self =
             |> Result.map (renameTodo todo)
             |> Result.map (tee repo.Upsert)
             |> Result.map toTodoDto
-            |> Result.toResponse ok badRequest
+            |> Result.toResponse httpOkObject httpBadRequestObject
         todoId
         |> Id.from
         |> repo.TryGet
         |> Option.map rename
-        |> Option.defaultWith notFound
+        |> Option.defaultWith httpNotFound
 
     [<HttpPost("{todoId}/tasks")>]
     member __.AddTask(todoId: int64,  [<FromBody>] request) =
@@ -149,7 +143,7 @@ type TodosController(repo: TodosRepository) as self =
             createTask request.title
             |> addTask todo
             |> repo.Upsert
-            |> noContent
+            |> httpNoContent
         todoId
         |> Id.from
         |> repo.TryGet
@@ -173,7 +167,7 @@ type TodosController(repo: TodosRepository) as self =
         |> Id.from
         |> repo.TryGet
         |> Option.map tryRenameTodo
-        |> Option.defaultWith notFound
+        |> Option.defaultWith httpNotFound
 
     [<HttpPut("{todoId}/tasks/{taskId}")>]
     member __.ChangeStatus(todoId: int64, taskId: int64,  [<FromQuery>] status: StatusDto) =
@@ -193,14 +187,14 @@ type TodosController(repo: TodosRepository) as self =
         |> Id.from
         |> repo.TryGet
         |> Option.map tryChangeStatus
-        |> Option.defaultWith notFound
+        |> Option.defaultWith httpNotFound
 
     [<HttpDelete("{todoId}")>]
     member __.DeleteTodo(todoId: int64) =
         todoId
         |> Id.from
         |> repo.TryGet
-        |> okOrNotFound (fun x -> repo.Remove x |> ignore; self.Ok())
+        |> okOrNotFound (fun x -> repo.Remove x |> ignore; httpOk())
 
     [<HttpDelete("{todoId}/tasks/{taskId}")>]
     member __.DeleteTask(todoId: int64, taskId: int64) =
@@ -216,4 +210,4 @@ type TodosController(repo: TodosRepository) as self =
         |> Id.from
         |> repo.TryGet
         |> Option.map tryDeleteTask
-        |> Option.defaultWith notFound
+        |> Option.defaultWith httpNotFound
